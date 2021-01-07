@@ -1,64 +1,71 @@
 import React from 'react';
-import {connect} from 'react-redux';
-import {createPost} from "../redux/actions";
+import {useFormik} from "formik";
+import {useDispatch} from "react-redux";
+import {addPost} from "../store/posts/postSlice";
+import MaskedInput from 'react-text-mask'
+import Button from "react-bootstrap/Button";
 
-class PostForm extends React.Component {
-    constructor(props) {
-        super(props);
+function PostForm(props) {
+    const dispatch = useDispatch();
 
-        console.log('props', props);
+    const formik = useFormik({
+        initialValues: {
+            title: '',
+            body: '',
+            number: ''
+        },
+        onSubmit: (values) => {
+            if (values.title.trim() && values.body.trim()) {
+                const newPost = {
+                    id: new Date().getSeconds(),
+                    title: values.title,
+                    body: values.body,
+                    author: 3
+                };
 
-        this.state = {
-            title: ''
-        };
-    }
+                dispatch(addPost(newPost));
+            }
+        },
+    });
 
-    submitHandler = (e) => {
-        e.preventDefault();
 
-        const {title} = this.state;
+    return (
+        <form className="d-flex flex-column bg-primary p-3" onSubmit={formik.handleSubmit} style={{width: "400px"}}>
+            <label className="mb-0" htmlFor="firstName">First Name</label>
+            <input
+                id="title"
+                name="title"
+                type="text"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.title}
+            />
 
-        if (!title.trim()) {
-            return
-        }
+            <label className="mb-0" htmlFor="lastName">Last Name</label>
+            <input
+                id="body"
+                name="body"
+                type="text"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.body}
+            />
 
-        const newPost = {
-            title, id: Date.now().toString()
-        };
+            <label className="mb-0" htmlFor="phone">Phone</label>
+            <MaskedInput
+                mask={['+', '8', ' ', '(', /[1-9]/, /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, '-', /\d/, /\d/, '-', /\d/, /\d/]}
+                // placeholder="Enter a phone number"
+                keepCharPositions={true}
+                // guide={true}
+                showMask={true}
+                id="phone"
+                onChange={() => formik.handleChange}
+                value={formik.values.number}
+            />
 
-        console.log(newPost);
-
-        this.props.createPost(newPost);
-
-        this.setState({title: ''})
-    };
-
-    onChangeHandler = (e) => {
-      e.preventDefault();
-
-      this.setState(prev => ({...prev, ...{[e.target.name]: e.target.value}}))
-    };
-
-    render() {
-        return (
-            <form onSubmit={this.submitHandler}>
-                <label htmlFor="title">Инпут лабел</label>
-                <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    value={this.state.title}
-                    onChange={this.onChangeHandler}
-                />
-
-                <button type="submit">Отправить форму</button>
-            </form>
-        )
-    }
+            <Button variant="outline-light mt-3" type="submit">Add post</Button>
+        </form>
+    );
 }
 
-const mapDispatchToProps = {
-    createPost
-};
-
-export default connect(null, mapDispatchToProps)(PostForm)
+export default PostForm;
